@@ -23,7 +23,8 @@ export class PaymentsService {
       const createNewOrder = await this.orderClient.create({
         body: {
           type: 'online',
-          external_reference: 'order-002',
+          external_reference: 'order-123',
+          processing_mode: "automatic",
           transactions: {
             payments: [
               {

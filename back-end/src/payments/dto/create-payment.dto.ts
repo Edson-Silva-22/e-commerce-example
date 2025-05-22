@@ -13,7 +13,7 @@ export class CreatePaymentDto {
   @IsString({message: 'O tipo de método de pagamento deve ser um string'})
   payment_method_type: string
 
-  @IsNotEmpty({message: 'O número de parcelas deve ser informado'})
+  @IsOptional()
   @IsNumber({}, {message: 'O número de parcelas deve ser um número'})
   installments: number;
 
