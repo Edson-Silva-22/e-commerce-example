@@ -22,7 +22,17 @@
               :complete="step > item.value"
               color="#56105f"
             >
-              <span style="color: #56105f; font-weight: 700;">{{ item.title }}</span>
+              <span 
+                v-if="display.width.value < 500 && item.value == step" 
+                style="color: #56105f; 
+                font-weight: 700;"
+              >{{ item.title }}</span>
+
+              <span 
+                v-if="display.width.value >= 500"
+                style="color: #56105f; 
+                font-weight: 700;"
+              >{{ item.title }}</span>
             </v-stepper-item>
     
             <v-divider
@@ -95,11 +105,13 @@
           </v-stepper-window-item>
           
           <v-stepper-window-item :value="4">
-            <v-progress-circular
-              v-if="loading"
-              color="primary"
-              indeterminate
-            ></v-progress-circular>
+            <div v-if="loading" class="d-flex justify-center align-center">
+              <v-progress-circular
+                color="#56105f"
+                indeterminate
+                size="84"
+              ></v-progress-circular>
+            </div>
 
             <form v-if="paymentMethodSelected == 'credit_card' && !loading" id="form-checkout" class="divForm">
               <div>
@@ -160,7 +172,7 @@
             <v-btn 
               @click="prev"
               color="#56105f"
-              
+              variant="tonal"
             >Anterior</v-btn>
           </template>
 
@@ -168,7 +180,7 @@
             <v-btn 
               @click="next"
               color="#56105f"
-              
+              variant="tonal"
             >Próximo</v-btn>
           </template>
         </v-stepper-actions>
@@ -182,6 +194,8 @@ import { usePaymentStore } from '@/stores/payments';
 import { loadMercadoPago } from '@mercadopago/sdk-js';
 import Alert from '@/components/Alert.vue';
 import { useAlertStore } from '@/stores/alert';
+import socketClient from '@/plugins/socketClient';
+import { useDisplay } from 'vuetify';
 
   export interface PaymentRequestData {
     transaction_amount: number,
@@ -196,13 +210,14 @@ import { useAlertStore } from '@/stores/alert';
     card_token?: string
   }
 
+  const display = useDisplay()
   const alertStore = useAlertStore()
   const paymentStore = usePaymentStore()
   const paymentRequestData = ref<PaymentRequestData>({
     transaction_amount: 199.99,
     payment_method_id: '',
     payment_method_type: '',
-    payer_email: '',
+    payer_email: 'test_user_1175059032@testuser.com',
     payer_name: '',
     payer_identification_type: 'CPF',
     payer_identification_number: ''
@@ -291,21 +306,15 @@ import { useAlertStore } from '@/stores/alert';
       paymentRequestData.value.payment_method_type = 'credit_card'
       paymentRequestData.value!.description = 'pagamento com cartão de crédito'
       
+      loading.value = true
       const response = await paymentStore.createPayment(paymentRequestData.value)
-      console.log(paymentRequestData.value)
-      console.log(response)
+      if (response.transactions.payments[0].status == "processed") alertStore.createAlert('Pagamento realizado com sucesso!', 'success')
+      loading.value = false
     }
   }
-  
-  onMounted(async () => {
-    await loadMercadoPago()
-    //@ts-ignore
-    mercadoPagoConfig = new MercadoPago("APP_USR-4ba53d08-77fb-40a4-9c42-cdeec46e34dc")
-  })
 
   watch(step, async (value) => {
     if(value === 4 && !cardFormMounted && paymentMethodSelected.value == "credit_card") {
-      console.log(value)
       // nextTick() é uma função do Vue usada para esperar até que o DOM esteja completamente atualizado após alguma mudança reativa.
       // Nesse caso espera o DOM estar atualizado antes de executar a próxima linha de código.
       await nextTick()
@@ -328,6 +337,26 @@ import { useAlertStore } from '@/stores/alert';
     }
 
     if (value === 4 && paymentMethodSelected.value != 'credit_card') await submitPayment() 
+  })
+
+  onMounted(async () => {
+    await loadMercadoPago()
+    //@ts-ignore
+    mercadoPagoConfig = new MercadoPago("APP_USR-4ba53d08-77fb-40a4-9c42-cdeec46e34dc")
+
+    // Conectando-se ao socket com o namespace messages
+    socketClient.connect('payments')
+    // Evento para receber notificações de pagamento
+    socketClient.subscribeEvent('notifyPayment', (paymentResponse: any) => {
+      if(paymentResponse.paymentStatus == 'approved') alertStore.createAlert('Pagamento confirmado com sucesso!', 'success')
+    })
+  })
+
+  onUnmounted(() => {
+    // Desinscrevendo de todos os eventos
+    socketClient.unsubscribeAllEvents()
+    // Desconectando-se do socket com o namespace messages
+    socketClient.disconnect()
   })
 </script>
 

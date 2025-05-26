@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { MercadoPagoConfig, Order, Payment } from 'mercadopago';
+import { MercadoPagoConfig, Order, Payment} from 'mercadopago';
+import { PaymentsGateway } from './payments.gateway';
 
 @Injectable()
 export class PaymentsService {
@@ -9,7 +9,9 @@ export class PaymentsService {
   private orderClient: Order;
   private paymentClient: Payment;
 
-  constructor() {
+  constructor(
+    private readonly paymentsGateway: PaymentsGateway
+  ) {
     this.mercadopago = new MercadoPagoConfig({
       accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN,
     });
@@ -50,11 +52,29 @@ export class PaymentsService {
           total_amount: `${createPaymentDto.transaction_amount}`
         }
       })
-      
+
       return createNewOrder; 
     } catch (error) {
       console.error(error);
-      return error
+      throw new InternalServerErrorException('Devido ao um erro interno, não foi relogado o pagamento.')
     }
+  }
+
+  async sendPaymentNotification(payment: any) {
+    try {
+      const findPayment = await this.paymentClient.get({id: payment.data.id})
+      // Verificar se o pagamento foi aprovado para enviar a notificação
+      if(findPayment.status == 'approved') {
+        this.paymentsGateway.notifyPayment({
+          message: 'Pagamento realizado com sucesso!', 
+          payment,
+          paymentStatus: findPayment.status,
+        })
+      }
+
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Devido ao um erro interno, não foi notificar o pagamento.')
+    }    
   }
 }

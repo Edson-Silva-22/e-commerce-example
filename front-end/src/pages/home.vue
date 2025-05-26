@@ -27,7 +27,7 @@
 
           <v-card-actions class="pl-0 d-flex justify-end">
             <v-btn 
-              color="primary" 
+              color="#56105f" 
               variant="tonal"
               @click="router.push('/payment')"
             >
