@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Req } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
 
 @Controller('payments')
 export class PaymentsController {
@@ -15,8 +14,8 @@ export class PaymentsController {
   // webhook que recebe a notificação do mercado pago
   @Post('webhook')
   @HttpCode(200)
-  handleWebhook(@Req() req: Request, @Body() body: any) {
-    console.log('Notificação recebida do Mercado Pago:', body);
+  async handleWebhook(@Body() body: any) {
+    await this.paymentsService.sendPaymentNotification(body)
     return { received: true };
   }
 
