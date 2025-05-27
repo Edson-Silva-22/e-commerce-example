@@ -196,7 +196,7 @@ import Alert from '@/components/Alert.vue';
 import { useAlertStore } from '@/stores/alert';
 import socketClient from '@/plugins/socketClient';
 import { useDisplay } from 'vuetify';
-
+import { useRouter } from 'vue-router';
   export interface PaymentRequestData {
     transaction_amount: number,
     payment_method_id: string,
@@ -210,6 +210,7 @@ import { useDisplay } from 'vuetify';
     card_token?: string
   }
 
+  const router = useRouter()
   const display = useDisplay()
   const alertStore = useAlertStore()
   const paymentStore = usePaymentStore()
@@ -308,8 +309,8 @@ import { useDisplay } from 'vuetify';
       
       loading.value = true
       const response = await paymentStore.createPayment(paymentRequestData.value)
-      if (response.transactions.payments[0].status == "processed") alertStore.createAlert('Pagamento realizado com sucesso!', 'success')
       loading.value = false
+      if (response.transactions.payments[0].status == "processed") router.push('/purchase-completed')
     }
   }
 
@@ -348,7 +349,7 @@ import { useDisplay } from 'vuetify';
     socketClient.connect('payments')
     // Evento para receber notificações de pagamento
     socketClient.subscribeEvent('notifyPayment', (paymentResponse: any) => {
-      if(paymentResponse.paymentStatus == 'approved') alertStore.createAlert('Pagamento confirmado com sucesso!', 'success')
+      if(paymentResponse.paymentStatus == 'approved') router.push('/purchase-completed')
     })
   })
 
