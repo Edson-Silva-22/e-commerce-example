@@ -22,7 +22,9 @@ export class UsersService {
       createUserDto.password = hashPassword;
       
       const createNewUser = await this.userModel.create(createUserDto);
-      return createNewUser;
+      const { password, ...user } = createNewUser.toObject()
+
+      return user;
     } catch (error) {
       console.error(error)
       if (error instanceof BadRequestException) throw error
@@ -55,15 +57,14 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     try {
-      const userIsExist = await this.userModel.findById(id);
-      if (!userIsExist) throw new BadRequestException('User not found')
-
       if (updateUserDto.password) {
         const hashPassword = await bcrypt.hash(updateUserDto.password, 10);
         updateUserDto.password = hashPassword;
       }
 
-      const updateUser = await this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
+      const updateUser = await this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true }).select("-password");
+      if (!updateUser) throw new BadRequestException('User not found')
+
       return updateUser;
     } catch (error) {
       console.error(error)
@@ -74,10 +75,9 @@ export class UsersService {
 
   async remove(id: string) {
     try {
-      const userIsExist = await this.userModel.findById(id);
-      if (!userIsExist) throw new BadRequestException('User not found')
+      const deleteUser = await this.userModel.findByIdAndDelete(id);
+      if (!deleteUser) throw new BadRequestException('User not found')
 
-      await this.userModel.findByIdAndDelete(id);
       return "User deleted successfully"
     } catch (error) {
       console.error(error)
