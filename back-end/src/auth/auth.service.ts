@@ -29,7 +29,7 @@ export class AuthService {
     } catch (error) {
       console.error(error)
       if (error instanceof BadRequestException) throw error
-      throw new BadRequestException('Internal server error. It was not possible to login.')
+      throw new InternalServerErrorException('Internal server error. It was not possible to login.')
     }
   }
 
