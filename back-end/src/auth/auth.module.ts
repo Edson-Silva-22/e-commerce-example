@@ -14,7 +14,7 @@ import { User, UserSchema } from '../users/entities/user.entity';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'default-secret',
+        secret: configService.get<string>('JWT_SECRET') ?? 'secret',
         signOptions: { expiresIn: '7d' },
       }),
     }),
