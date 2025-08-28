@@ -6,6 +6,7 @@ import { AuthGuard } from "../../../auth/auth.guard";
 import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { UpdateUserDto } from "../../dto/update-user.dto";
 import { validate } from "class-validator";
+import { AuthUserType } from "src/utils/decorators/auth-user.decorator";
 
 const mockUserService = {
   create: jest.fn(),
@@ -18,6 +19,30 @@ const mockUserService = {
 describe('UsersController', () => {
   let userController: UsersController;
   let userService: UsersService;
+  const userMock = {
+    _id: '1',
+    name: 'Alex',
+    email: 'alex@email',
+    cpf: '12345678909',
+    phone: '123456789',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+  const authUser: AuthUserType = {
+    sub: '1',
+    username: 'Alex'
+  }
+  const createUserDto: CreateUserDto = {
+    name: 'Alex',
+    email: 'alex@email',
+    cpf: '12345678909',
+    password: '123456',
+    phone: '123456789'
+  }
+  const updateUserDto: UpdateUserDto = {
+    name: 'Alex Silva',
+    password: 'new password'
+  }
 
   beforeAll(async () => {
     const userModuleTest: TestingModule = await Test.createTestingModule({
@@ -49,14 +74,6 @@ describe('UsersController', () => {
   })
 
   describe('Create Method', () => {
-    const createUserDto: CreateUserDto = {
-      name: 'Alex',
-      email: 'alex@email',
-      cpf: '12345678909',
-      password: '123456',
-      phone: '123456789'
-    }
-
     it('should create a new user', async () => {
       (userService.create as jest.Mock).mockResolvedValue(createUserDto);
 
@@ -108,26 +125,14 @@ describe('UsersController', () => {
   })
 
   describe('FindAll Method', () => {
-    const usersMock = [
-      {
-        _id: '1',
-        name: 'Alex',
-        email: 'alex@email',
-        cpf: '12345678909',
-        phone: '123456789',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ]
-
     it('should return an array of users', async () => {
-      (userService.findAll as jest.Mock).mockResolvedValue(usersMock);
+      (userService.findAll as jest.Mock).mockResolvedValue([userMock]);
 
       const result = await userController.findAll();
 
       expect(userService.findAll).toHaveBeenCalledTimes(1)
       expect(userService.findAll).toHaveBeenCalledWith()
-      expect(result).toEqual(usersMock)
+      expect(result).toEqual([userMock])
     })
 
     it('should handle internal server error', async () => {
@@ -141,16 +146,6 @@ describe('UsersController', () => {
   })
 
   describe('FindOne Method', () => {
-    const userMock = {
-      _id: '1',
-      name: 'Alex',
-      email: 'alex@email',
-      cpf: '12345678909',
-      phone: '123456789',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
     it('should return a user', async () => {
       (userService.findOne as jest.Mock).mockResolvedValue(userMock);
 
@@ -181,11 +176,6 @@ describe('UsersController', () => {
   })
 
   describe('Update Method', () => {
-    const updateUserDto: UpdateUserDto = {
-      name: 'Alex Silva',
-      password: 'new password'
-    }
-
     it('should update a user', async () => {
       (userService.update as jest.Mock).mockResolvedValue(updateUserDto);
 
@@ -215,16 +205,6 @@ describe('UsersController', () => {
   })
 
   describe('Delete Method', () => {
-    const userMock = {
-      _id: '1',
-      name: 'Alex',
-      email: 'alex@email',
-      cpf: '12345678909',
-      phone: '123456789',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
     it('should delete a user', async () => {
       (userService.remove as jest.Mock).mockResolvedValue('User deleted successfully');
 
@@ -251,6 +231,66 @@ describe('UsersController', () => {
 
       expect(userService.remove).toHaveBeenCalledTimes(1)
       expect(userService.remove).toHaveBeenCalledWith('userId')
+    })
+  })
+
+  describe('Me Method', () => {
+    it('should return a user', async () => {
+      (userService.findOne as jest.Mock).mockResolvedValue({...userMock, password: 'hashedPassword'});
+
+      const result = await userController.findOne(authUser.sub);
+
+      expect(userService.findOne).toHaveBeenCalledTimes(1)
+      expect(userService.findOne).toHaveBeenCalledWith(authUser.sub)
+      expect(result).toEqual({...userMock, password: 'hashedPassword'})
+    })
+
+    it('should throw an error if user not found', async () => {
+      (userService.findOne as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
+
+      await expect(userController.findOne(authUser.sub)).rejects.toThrow(BadRequestException)
+
+      expect(userService.findOne).toHaveBeenCalledTimes(1)
+      expect(userService.findOne).toHaveBeenCalledWith(authUser.sub)
+    })
+
+    it('should handle internal server error', async () => {
+      (userService.findOne as jest.Mock).mockRejectedValue(new InternalServerErrorException('Internal server error. It was not possible to get the user.'))
+
+      await expect(userController.findOne(authUser.sub)).rejects.toThrow(InternalServerErrorException)
+
+      expect(userService.findOne).toHaveBeenCalledTimes(1)
+      expect(userService.findOne).toHaveBeenCalledWith(authUser.sub)
+    })
+  })
+
+  describe('UpdateMe Method', () => {
+    it('should update a user', async () => {
+      (userService.update as jest.Mock).mockResolvedValue(updateUserDto);
+
+      const result = await userController.updateMe(authUser, updateUserDto);
+
+      expect(userService.update).toHaveBeenCalledTimes(1)
+      expect(userService.update).toHaveBeenCalledWith(authUser.sub, updateUserDto)
+      expect(result).toEqual(updateUserDto)
+    })
+
+    it('should throw an error if user not found', async () => {
+      (userService.update as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
+
+      await expect(userController.updateMe(authUser, updateUserDto)).rejects.toThrow(BadRequestException);
+
+      expect(userService.update).toHaveBeenCalledTimes(1)
+      expect(userService.update).toHaveBeenCalledWith(authUser.sub, updateUserDto)
+    })
+
+    it('should handle internal server error', async () => {
+      (userService.update as jest.Mock).mockRejectedValue(new InternalServerErrorException('Internal server error. It was not possible to update the user.'))
+
+      await expect(userController.updateMe(authUser, updateUserDto)).rejects.toThrow(InternalServerErrorException)
+
+      expect(userService.update).toHaveBeenCalledTimes(1)
+      expect(userService.update).toHaveBeenCalledWith(authUser.sub, updateUserDto)
     })
   })
 })

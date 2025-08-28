@@ -5,7 +5,6 @@ import { Connection } from "mongoose";
 import { AppModule } from "../../../app.module";
 import { CreateUserDto } from "../../../users/dto/create-user.dto";
 import * as request from 'supertest';
-import { ConfigModule } from "@nestjs/config";
 
 describe('Auth Endpoints', () => {
   let app: INestApplication;
@@ -124,58 +123,6 @@ describe('Auth Endpoints', () => {
           "password should not be empty",
           "password must be a string"
         ])
-      });
-    })
-  })
-
-  describe('GET /auth/user', () => {
-    it('should return a user', async () => {
-      const createUser = await request(app.getHttpServer())
-        .post('/users')
-        .send(createUserDto)
-        .expect(201);
-
-      expect(createUser.body).toMatchObject({
-        name: createUserDto.name,
-        email: createUserDto.email,
-        cpf: createUserDto.cpf,
-        phone: createUserDto.phone
-      });
-
-      const login = await request(app.getHttpServer())
-        .post('/auth')
-        .send({
-          email: createUserDto.email,
-          password: createUserDto.password
-        })
-        .expect(201);
-
-      expect(login.text).toBe('Login successful');
-      expect(login.get('Set-Cookie')![0]).toMatch(/token=/);
-
-      const response = await request(app.getHttpServer())
-        .get('/auth/me')
-        // .set('Cookie', login.get('Set-Cookie')![0])
-        .set('Authorization', `Bearer ${login.get('Set-Cookie')![0].split(';')[0].split('=')[1]}`)
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        name: createUserDto.name,
-        email: createUserDto.email,
-        cpf: createUserDto.cpf,
-        phone: createUserDto.phone
-      });
-    })
-
-    it('should throw an error if token is invalid', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/auth/me')
-        .set('Authorization', `Bearer invalid-token`)
-        .expect(401)
-
-      expect(response.body).toEqual({
-        status: 401,
-        message: 'Unauthorized',
       });
     })
   })

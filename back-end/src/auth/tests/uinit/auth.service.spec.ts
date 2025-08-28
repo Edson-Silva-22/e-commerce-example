@@ -117,40 +117,4 @@ describe('Auth Service', () => {
       expect(jwtService.signAsync).toHaveBeenCalledWith({ sub: userMock._id, username: userMock.name })
     })
   })
-
-  describe('GetAuthUser Method', () => {
-    it('should return a user', async () => {
-      userModel.findById.mockReturnValue({
-        select: jest.fn().mockResolvedValue(userMock)
-      });
-
-      const result = await authService.getAuthUser('userId');
-
-      expect(userModel.findById).toHaveBeenCalledTimes(1)
-      expect(userModel.findById).toHaveBeenCalledWith('userId')
-      expect(result).toEqual(userMock)
-    })
-
-    it('should throw an error if user not found', async () => {
-      userModel.findById.mockReturnValue({
-        select: jest.fn().mockResolvedValue(null)
-      });
-
-      await expect(authService.getAuthUser('userId')).rejects.toThrow(BadRequestException)
-
-      expect(userModel.findById).toHaveBeenCalledTimes(1)
-      expect(userModel.findById).toHaveBeenCalledWith('userId')
-    })
-
-    it('should handle internal server error', async () => {
-      userModel.findById.mockReturnValue({
-        select: jest.fn().mockRejectedValue(new Error('DB Error'))
-      })
-
-      await expect(authService.getAuthUser('userId')).rejects.toThrow(InternalServerErrorException)
-
-      expect(userModel.findById).toHaveBeenCalledTimes(1)
-      expect(userModel.findById).toHaveBeenCalledWith('userId')
-    })
-  })
 })

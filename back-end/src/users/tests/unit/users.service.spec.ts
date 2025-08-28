@@ -19,7 +19,27 @@ const mockUserModel = {
 
 describe('UsersService', () => {
   let service: UsersService;
-  let model: typeof User
+  let userModel: typeof mockUserModel;
+  const userMock = {
+    _id: '1',
+    name: 'Alex',
+    email: 'alex@email',
+    cpf: '12345678909',
+    phone: '123456789',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+  const createUserDto: CreateUserDto = {
+    name: 'Alex',
+    email: 'alex@email',
+    cpf: '12345678909',
+    password: '123456',
+    phone: '123456789'
+  }
+  const updateUserDto: UpdateUserDto = {
+    name: 'Alex Silva',
+    password: 'new password'
+  }
 
   beforeAll( async () => {
     // Criar um módulo de teste isolado, simulando o ambiente real de injeção de dependências do NestJS
@@ -34,7 +54,7 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    model = module.get<typeof User>(getModelToken(User.name));
+    userModel = module.get(getModelToken(User.name));
   });
 
   afterEach(() => {
@@ -47,13 +67,6 @@ describe('UsersService', () => {
   });
 
   describe('Create Method', () => {
-    const createUserDto: CreateUserDto = {
-      name: 'Alex',
-      email: 'alex@email',
-      cpf: '12345678909',
-      password: '123456',
-      phone: '123456789'
-    }
     const hashedPassword = 'hashedPassword';
 
     it('should create a new user', async () => {
@@ -106,28 +119,16 @@ describe('UsersService', () => {
   })
 
   describe('FindAll Method', () => {
-    const usersMock = [
-      {
-        _id: '1',
-        name: 'Alex',
-        email: 'alex@email',
-        cpf: '12345678909',
-        phone: '123456789',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ]
-
     it('should return an array of users', async () => {
       mockUserModel.find.mockReturnValue({
-        select: jest.fn().mockResolvedValue(usersMock)
+        select: jest.fn().mockResolvedValue([userMock])
       });
 
       const result = await service.findAll();
 
       expect(mockUserModel.find).toHaveBeenCalledTimes(1)
       expect(mockUserModel.find).toHaveBeenCalledWith()
-      expect(result).toEqual(usersMock)
+      expect(result).toEqual([userMock])
     })
 
     it('should handle internal server error', async () => {
@@ -144,16 +145,6 @@ describe('UsersService', () => {
   })
 
   describe('FindOne Method', () => {
-    const userMock = {
-      _id: '1',
-      name: 'Alex',
-      email: 'alex@email',
-      cpf: '12345678909',
-      phone: '123456789',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
     it('should return a user', async () => {
       mockUserModel.findById.mockReturnValue({
         select: jest.fn().mockResolvedValue(userMock)
@@ -190,11 +181,6 @@ describe('UsersService', () => {
   })
 
   describe('Update Method', () => {
-    const updateUserDto: UpdateUserDto = {
-      name: 'Alex Silva',
-      password: 'new password'
-    }
-
     it('should update a user', async () => {
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword');
       mockUserModel.findByIdAndUpdate.mockReturnValue({
@@ -232,16 +218,6 @@ describe('UsersService', () => {
   })
 
   describe('Delete Method', () => {
-    const userMock = {
-      _id: '1',
-      name: 'Alex',
-      email: 'alex@email',
-      cpf: '12345678909',
-      phone: '123456789',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
     it('should delete a user', async () => {
       mockUserModel.findByIdAndDelete.mockResolvedValue(userMock);
 
