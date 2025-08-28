@@ -2,7 +2,7 @@ import { INestApplication, ValidationPipe } from "@nestjs/common"
 import { JwtService } from "@nestjs/jwt";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { Connection } from "mongoose";
+import { Connection, Types } from "mongoose";
 import { AppModule } from "../../../app.module";
 import { CreateUserDto } from "../../dto/create-user.dto";
 import * as request from 'supertest';
@@ -22,8 +22,7 @@ describe('Users Endpoints', () => {
   }
 
   const updateUserDto: UpdateUserDto = {
-    name: 'Alex Silva',
-    password: 'new password'
+    name: 'Alex Silva'
   }
 
   beforeAll(async () => {
@@ -45,11 +44,6 @@ describe('Users Endpoints', () => {
     await app.init();
 
     jwtService = moduleTest.get(JwtService);
-    // Cria o token
-    jwtToken = await jwtService.signAsync(
-      { sub: 'user-id-teste' }, // payload
-      { secret: process.env.JWT_SECRET }, // mesma secret usada no AuthGuard
-    );
   })
 
   beforeEach(async () => {
@@ -61,6 +55,47 @@ describe('Users Endpoints', () => {
     await connection.close();
     await app.close();
   });
+
+  async function createTestUser(
+    app: INestApplication, 
+    connection: Connection,
+    jwtService: JwtService,
+    createUserDto: CreateUserDto, 
+    roleTypes: string[]
+  ) {
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .send(createUserDto)
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      name: createUserDto.name,
+      email: createUserDto.email,
+      cpf: createUserDto.cpf,
+      phone: createUserDto.phone,
+    });
+
+    await connection
+      .useDb('e-commerce-test')
+      .collection('users')
+      .findOneAndUpdate(
+        { _id: new Types.ObjectId(response.body._id) },
+        { $set: { roles: roleTypes } },
+        { returnDocument: 'after' }
+      )
+
+    // Cria o token
+    jwtToken = await jwtService.signAsync(
+      { sub: response.body._id, username: response.body.name }, // payload
+      { secret: process.env.JWT_SECRET }, // mesma secret usada no AuthGuard
+    );
+
+    return {
+      token: jwtToken,
+      user: response.body,
+    };
+  }
+
 
   describe('POST /users', () => {
     it('should create a new user', async () => {
@@ -108,21 +143,11 @@ describe('Users Endpoints', () => {
 
   describe('GET /users', () => {
     it('should return an array of users', async () => {
-      const createUser = await request(app.getHttpServer())
-        .post('/users')
-        .send(createUserDto)
-        .expect(201);
-
-      expect(createUser.body).toMatchObject({
-        name: createUserDto.name,
-        email: createUserDto.email,
-        cpf: createUserDto.cpf,
-        phone: createUserDto.phone
-      });
+      const { token } = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
 
       const response = await request(app.getHttpServer())
         .get('/users')
-        .set('Authorization', `Bearer ${jwtToken}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -138,35 +163,28 @@ describe('Users Endpoints', () => {
 
   describe('GET /users/:id', () => {
     it('should return a user', async () => {
-      const createUser = await request(app.getHttpServer())
-        .post('/users')
-        .send(createUserDto)
-        .expect(201);
-
-      expect(createUser.body).toMatchObject({
-        name: createUserDto.name,
-        email: createUserDto.email,
-        cpf: createUserDto.cpf,
-        phone: createUserDto.phone
-      });
+      const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
+      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com'}, ['user']); 
 
       const response = await request(app.getHttpServer())
-        .get('/users/' + createUser.body._id)
-        .set('Authorization', `Bearer ${jwtToken}`)
+        .get('/users/' + createUser.user._id)
+        .set('Authorization', `Bearer ${createAdmin.token}`)
         .expect(200);
 
       expect(response.body).toMatchObject({
-        name: createUserDto.name,
-        email: createUserDto.email,
+        name: 'Daniel',
+        email: 'daniel@email.com',
         cpf: createUserDto.cpf,
         phone: createUserDto.phone
       });
     })
 
     it('should throw an error if user not found', async () => {
+      const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
+
       await request(app.getHttpServer())
         .get('/users/68823c31515ace1cb0e5c748')
-        .set('Authorization', `Bearer ${jwtToken}`)
+        .set('Authorization', `Bearer ${createAdmin.token}`)
         .expect(400)
     })
 
@@ -180,21 +198,12 @@ describe('Users Endpoints', () => {
 
   describe('PUT /users/:id', () => {
     it('should update a user', async () => {
-      const createUser = await request(app.getHttpServer())
-        .post('/users')
-        .send(createUserDto)
-        .expect(201);
-
-      expect(createUser.body).toMatchObject({
-        name: createUserDto.name,
-        email: createUserDto.email,
-        cpf: createUserDto.cpf,
-        phone: createUserDto.phone
-      });
+      const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
+      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com'}, ['user']);
       
       const response = await request(app.getHttpServer())
-        .put('/users/' + createUser.body._id)
-        .set('Authorization', `Bearer ${jwtToken}`)
+        .put('/users/' + createUser.user._id)
+        .set('Authorization', `Bearer ${createAdmin.token}`)
         .send(updateUserDto)
         .expect(200);
 
@@ -204,9 +213,11 @@ describe('Users Endpoints', () => {
     })
 
     it('should throw an error if user not found', async () => {
+      const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
+
       await request(app.getHttpServer())
         .put('/users/68823c31515ace1cb0e5c748')
-        .set('Authorization', `Bearer ${jwtToken}`)
+        .set('Authorization', `Bearer ${createAdmin.token}`)
         .send(updateUserDto)
         .expect(400);
     })
@@ -222,30 +233,23 @@ describe('Users Endpoints', () => {
 
   describe('DELETE /users/:id', () => {
     it('should delete a user', async () => {
-      const createUser1 = await request(app.getHttpServer())
-        .post('/users')
-        .send(createUserDto)
-        .expect(201);
-
-      expect(createUser1.body).toMatchObject({
-        name: createUserDto.name,
-        email: createUserDto.email,
-        cpf: createUserDto.cpf,
-        phone: createUserDto.phone
-      });
+      const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
+      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com'}, ['user']);
 
       const response = await request(app.getHttpServer())
-        .delete('/users/' + createUser1.body._id)
-        .set('Authorization', `Bearer ${jwtToken}`)
+        .delete('/users/' + createUser.user._id)
+        .set('Authorization', `Bearer ${createAdmin.token}`)
         .expect(200);
 
       expect(response.text).toBe('User deleted successfully');
     })
 
     it('should throw an error if user not found', async () => {
+      const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
+      
       await request(app.getHttpServer())
         .delete('/users/68823c31515ace1cb0e5c748')
-        .set('Authorization', `Bearer ${jwtToken}`)
+        .set('Authorization', `Bearer ${createAdmin.token}`)
         .expect(400);
     })
 
@@ -254,6 +258,65 @@ describe('Users Endpoints', () => {
         .delete('/users/68823c31515ace1cb0e5c748')
         .set('Authorization', `Bearer invalid-token`)
         .expect(401);
+    })
+  })
+
+  describe('GET /users/me', () => {
+    it('should return a user', async () => {
+      const createUser = await createTestUser(app, connection, jwtService, createUserDto, ['user']);
+
+      const response = await request(app.getHttpServer())
+        .get('/users/me')
+        // .set('Cookie', login.get('Set-Cookie')![0])
+        .set('Authorization', `Bearer ${createUser.token}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        name: createUserDto.name,
+        email: createUserDto.email,
+        cpf: createUserDto.cpf,
+        phone: createUserDto.phone
+      });
+    })
+
+    it('should throw an error if token is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer invalid-token`)
+        .expect(401)
+
+      expect(response.body).toEqual({
+        status: 401,
+        message: 'Unauthorized',
+      });
+    })
+  })
+
+  describe('PUT /users/me', () => {
+    it('should update a user', async () => {
+      const createUser = await createTestUser(app, connection, jwtService, createUserDto, ['user']);
+
+      const response = await request(app.getHttpServer())
+        .put('/users/me')
+        .set('Authorization', `Bearer ${createUser.token}`)
+        .send(updateUserDto)
+        .expect(200);
+      
+      expect(response.body).toMatchObject({
+        name: updateUserDto.name
+      })
+    })
+
+    it('Should throw an error if token is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .put('/users/me')
+        .set('Authorization', `Bearer invalid-token`)
+        .expect(401)
+
+      expect(response.body).toEqual({
+        status: 401,
+        message: 'Unauthorized',
+      });
     })
   })
 })

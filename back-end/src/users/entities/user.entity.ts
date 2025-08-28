@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-export enum Rules {
+export enum Role {
   ADMIN = 'admin',
   CLIENT = 'client',
   SELLER = 'seller',
@@ -26,7 +26,7 @@ export class User {
   avatar: string;
   
   @Prop()
-  rules: Rules[]
+  roles: Role[]
   
   @Prop()
   phone: string;

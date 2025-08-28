@@ -114,34 +114,4 @@ describe('Auth Cotroller', () => {
       expect(authService.login).toHaveBeenCalledWith(createAuthDto)
     })
   })
-
-  describe('GetAuthUser Method', () => {
-    it('should return a user', async () => {
-      (authService.getAuthUser as jest.Mock).mockResolvedValue({...userMock, password: 'hashedPassword'});
-
-      const result = await authController.getAuthUser(authUser);
-
-      expect(authService.getAuthUser).toHaveBeenCalledTimes(1)
-      expect(authService.getAuthUser).toHaveBeenCalledWith(authUser.sub)
-      expect(result).toEqual({...userMock, password: 'hashedPassword'})
-    })
-
-    it('should throw an error if user not found', async () => {
-      (authService.getAuthUser as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
-
-      await expect(authController.getAuthUser(authUser)).rejects.toThrow(BadRequestException)
-
-      expect(authService.getAuthUser).toHaveBeenCalledTimes(1)
-      expect(authService.getAuthUser).toHaveBeenCalledWith(authUser.sub)
-    })
-
-    it('should handle internal server error', async () => {
-      (authService.getAuthUser as jest.Mock).mockRejectedValue(new InternalServerErrorException('Internal server error. It was not possible to get the user.'))
-
-      await expect(authController.getAuthUser(authUser)).rejects.toThrow(InternalServerErrorException)
-
-      expect(authService.getAuthUser).toHaveBeenCalledTimes(1)
-      expect(authService.getAuthUser).toHaveBeenCalledWith(authUser.sub)
-    })
-  })
 })

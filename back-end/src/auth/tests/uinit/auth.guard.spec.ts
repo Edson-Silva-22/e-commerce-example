@@ -7,6 +7,7 @@ describe('AuthGuard', () => {
   let jwtService: JwtService;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     jwtService = new JwtService({ secret: 'secret' });
     guard = new AuthGuard(jwtService);
   });

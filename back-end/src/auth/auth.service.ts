@@ -32,17 +32,4 @@ export class AuthService {
       throw new InternalServerErrorException('Internal server error. It was not possible to login.')
     }
   }
-
-  async getAuthUser(userId: string) {
-    try {
-      const findUser = await this.userModel.findById(userId).select('-password');
-      if (!findUser) throw new BadRequestException('User not found')
-      
-      return findUser
-    } catch (error) {
-      console.error(error)
-      if (error  instanceof BadRequestException) throw error
-      throw new InternalServerErrorException('Internal server error. It was not possible to get the user.')
-    }
-  }
 }

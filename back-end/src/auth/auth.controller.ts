@@ -1,8 +1,6 @@
-import { Controller, Get, Post, Body, UseGuards, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
-import { AuthGuard } from './auth.guard';
-import { AuthUser, AuthUserType } from '../utils/decorators/auth-user.decorator';
 import { Response } from 'express';
 
 @Controller('auth')
@@ -19,11 +17,5 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7, // Define validade do cookie (em milissegundos)
     });
     return 'Login successful'
-  }
-
-  @Get('me')
-  @UseGuards(AuthGuard)
-  async getAuthUser(@AuthUser() authUser: AuthUserType) {
-    return this.authService.getAuthUser(authUser.sub);
   }
 }
