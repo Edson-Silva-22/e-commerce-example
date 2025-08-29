@@ -41,6 +41,7 @@
         prepend-inner-icon="mdi-card-account-details"
         type="text"
         clearable
+        v-maska="'###.###.###-##'"
       ></v-text-field>
 
       <v-text-field
@@ -79,8 +80,8 @@
         variant="solo"
         bg-color="inputBackground"
         prepend-inner-icon="mdi-phone"
-        type="number"
         clearable
+        v-maska="'(##) #####-####'"
       ></v-text-field>
 
       <v-btn 
@@ -103,6 +104,8 @@
 </template>
 
 <script setup lang="ts">
+  import { vMaska } from 'maska/vue';
+
   const router = useRouter()
   const passwordIsVisible = ref(false);
   const ConfirmPasswordIsVisible = ref(false);
