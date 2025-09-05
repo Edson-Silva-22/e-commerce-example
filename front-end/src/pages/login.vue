@@ -13,7 +13,7 @@
         name="email"
         placeholder="Email"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-account"
         type="email"
         clearable
@@ -25,7 +25,7 @@
         name="password"
         placeholder="Senha"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-lock"
         :append-inner-icon="passwordIsVisible ? 'mdi-eye-off' : 'mdi-eye'"
         :type="passwordIsVisible ? 'text' : 'password'"

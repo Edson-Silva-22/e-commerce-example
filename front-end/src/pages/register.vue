@@ -13,7 +13,7 @@
         name="name"
         placeholder="Nome Completo"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-account"
         type="text"
         clearable
@@ -25,7 +25,7 @@
         name="email"
         placeholder="Email"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-at"
         type="text"
         clearable
@@ -37,7 +37,7 @@
         name="cpf"
         placeholder="CPF"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-card-account-details"
         type="text"
         clearable
@@ -50,7 +50,7 @@
         name="password"
         placeholder="Senha"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-lock"
         :append-inner-icon="passwordIsVisible ? 'mdi-eye-off' : 'mdi-eye'"
         :type="passwordIsVisible ? 'text' : 'password'"
@@ -64,7 +64,7 @@
         name="confirmPassword"
         placeholder="Confirmar Senha"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-lock"
         :append-inner-icon="ConfirmPasswordIsVisible ? 'mdi-eye-off' : 'mdi-eye'"
         :type="ConfirmPasswordIsVisible ? 'text' : 'password'"
@@ -78,7 +78,7 @@
         name="phone"
         placeholder="Telefone"
         variant="solo"
-        bg-color="inputBackground"
+        bg-color="foregroud"
         prepend-inner-icon="mdi-phone"
         clearable
         v-maska="'(##) #####-####'"

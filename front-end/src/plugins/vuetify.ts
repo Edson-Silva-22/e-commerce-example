@@ -20,7 +20,8 @@ export default createVuetify({
         colors: {
           background: "#020617",
           primary: "#0369a1",
-          inputBackground: "#1e293b",
+          foregroud: "#1e293b",
+          textPrimary: "#cbd5e1",
           textSecundary: "#64748b",
         }
       }
