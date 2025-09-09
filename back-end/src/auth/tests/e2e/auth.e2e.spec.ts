@@ -76,12 +76,12 @@ describe('Auth Endpoints', () => {
           email: createUserDto.email,
           password: createUserDto.password
         })
-        .expect(400);
+        .expect(404);
 
       expect(response.body).toEqual({
-        statusCode: 400,
-        message: 'User not found',
-        error: 'Bad Request'
+        statusCode: 404,
+        message: 'Usuário não encontrado.',
+        error: 'Not Found'
       });
     })
 
@@ -101,7 +101,7 @@ describe('Auth Endpoints', () => {
 
       expect(response.body).toEqual({
         statusCode: 400,
-        message: 'Password incorrect',
+        message: 'Senha incorreta.',
         error: 'Bad Request'
       });
     })

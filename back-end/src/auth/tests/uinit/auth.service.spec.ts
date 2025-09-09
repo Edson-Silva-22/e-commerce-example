@@ -5,7 +5,7 @@ import { User } from "../../../users/entities/user.entity";
 import * as bcrypt from 'bcrypt';
 import { CreateAuthDto } from "../../dto/create-auth.dto";
 import { JwtService } from "@nestjs/jwt";
-import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 
 const mockUserModel = {
   findOne: jest.fn(),
@@ -81,7 +81,7 @@ describe('Auth Service', () => {
     it('should throw an error if user email not found', async () => {
       userModel.findOne.mockResolvedValue(null);
 
-      await expect(authService.login(createAuthDto)).rejects.toThrow(BadRequestException)
+      await expect(authService.login(createAuthDto)).rejects.toThrow(NotFoundException)
 
       expect(userModel.findOne).toHaveBeenCalledTimes(1)
       expect(userModel.findOne).toHaveBeenCalledWith({ email: createAuthDto.email })

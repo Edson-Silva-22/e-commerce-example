@@ -164,7 +164,7 @@ describe('Users Endpoints', () => {
   describe('GET /users/:id', () => {
     it('should return a user', async () => {
       const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
-      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com'}, ['user']); 
+      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com', cpf: '12345678910'}, ['user']); 
 
       const response = await request(app.getHttpServer())
         .get('/users/' + createUser.user._id)
@@ -174,7 +174,7 @@ describe('Users Endpoints', () => {
       expect(response.body).toMatchObject({
         name: 'Daniel',
         email: 'daniel@email.com',
-        cpf: createUserDto.cpf,
+        cpf: '12345678910',
         phone: createUserDto.phone
       });
     })
@@ -185,7 +185,7 @@ describe('Users Endpoints', () => {
       await request(app.getHttpServer())
         .get('/users/68823c31515ace1cb0e5c748')
         .set('Authorization', `Bearer ${createAdmin.token}`)
-        .expect(400)
+        .expect(404)
     })
 
     it('should throw an error if token is invalid', async () => {
@@ -199,7 +199,7 @@ describe('Users Endpoints', () => {
   describe('PUT /users/:id', () => {
     it('should update a user', async () => {
       const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
-      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com'}, ['user']);
+      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com', cpf: '12345678910'}, ['user']);
       
       const response = await request(app.getHttpServer())
         .put('/users/' + createUser.user._id)
@@ -219,7 +219,7 @@ describe('Users Endpoints', () => {
         .put('/users/68823c31515ace1cb0e5c748')
         .set('Authorization', `Bearer ${createAdmin.token}`)
         .send(updateUserDto)
-        .expect(400);
+        .expect(404);
     })
 
     it('should throw an error if token is invalid', async () => {
@@ -234,14 +234,14 @@ describe('Users Endpoints', () => {
   describe('DELETE /users/:id', () => {
     it('should delete a user', async () => {
       const createAdmin = await createTestUser(app, connection, jwtService, createUserDto, ['admin']);
-      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com'}, ['user']);
+      const createUser = await createTestUser(app, connection, jwtService, { ...createUserDto, name: 'Daniel', email: 'daniel@email.com', cpf: '12345678910'}, ['user']);
 
       const response = await request(app.getHttpServer())
         .delete('/users/' + createUser.user._id)
         .set('Authorization', `Bearer ${createAdmin.token}`)
         .expect(200);
 
-      expect(response.text).toBe('User deleted successfully');
+      expect(response.text).toBe('Usuário deletado com sucesso.');
     })
 
     it('should throw an error if user not found', async () => {
@@ -250,7 +250,7 @@ describe('Users Endpoints', () => {
       await request(app.getHttpServer())
         .delete('/users/68823c31515ace1cb0e5c748')
         .set('Authorization', `Bearer ${createAdmin.token}`)
-        .expect(400);
+        .expect(404);
     })
 
     it('should throw an error if token is invalid', async () => {
