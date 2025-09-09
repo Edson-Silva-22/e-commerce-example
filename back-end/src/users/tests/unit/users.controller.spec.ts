@@ -3,7 +3,7 @@ import { UsersController } from "../../users.controller";
 import { UsersService } from "../../users.service";
 import { CreateUserDto } from "../../dto/create-user.dto";
 import { AuthGuard } from "../../../auth/auth.guard";
-import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { UpdateUserDto } from "../../dto/update-user.dto";
 import { validate } from "class-validator";
 import { AuthUserType } from "src/utils/decorators/auth-user.decorator";
@@ -157,9 +157,9 @@ describe('UsersController', () => {
     })
 
     it('should throw an error if user not found', async () => {
-      (userService.findOne as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
+      (userService.findOne as jest.Mock).mockRejectedValue(new NotFoundException('User not found'))
 
-      await expect(userController.findOne('userId')).rejects.toThrow(BadRequestException);
+      await expect(userController.findOne('userId')).rejects.toThrow(NotFoundException);
 
       expect(userService.findOne).toHaveBeenCalledTimes(1)
       expect(userService.findOne).toHaveBeenCalledWith('userId')
@@ -186,9 +186,9 @@ describe('UsersController', () => {
     })
 
     it('should throw an error if user not found', async () => {
-      (userService.update as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
+      (userService.update as jest.Mock).mockRejectedValue(new NotFoundException('User not found'))
 
-      await expect(userController.update('userId', updateUserDto)).rejects.toThrow(BadRequestException);
+      await expect(userController.update('userId', updateUserDto)).rejects.toThrow(NotFoundException);
 
       expect(userService.update).toHaveBeenCalledTimes(1)
       expect(userService.update).toHaveBeenCalledWith('userId', updateUserDto)
@@ -216,9 +216,9 @@ describe('UsersController', () => {
     })
 
     it('should throw an error if user not found', async () => {
-      (userService.remove as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
+      (userService.remove as jest.Mock).mockRejectedValue(new NotFoundException('User not found'))
 
-      await expect(userController.remove('userId')).rejects.toThrow(BadRequestException);
+      await expect(userController.remove('userId')).rejects.toThrow(NotFoundException);
 
       expect(userService.remove).toHaveBeenCalledTimes(1)
       expect(userService.remove).toHaveBeenCalledWith('userId')
@@ -246,9 +246,9 @@ describe('UsersController', () => {
     })
 
     it('should throw an error if user not found', async () => {
-      (userService.findOne as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
+      (userService.findOne as jest.Mock).mockRejectedValue(new NotFoundException('User not found'))
 
-      await expect(userController.findOne(authUser.sub)).rejects.toThrow(BadRequestException)
+      await expect(userController.findOne(authUser.sub)).rejects.toThrow(NotFoundException)
 
       expect(userService.findOne).toHaveBeenCalledTimes(1)
       expect(userService.findOne).toHaveBeenCalledWith(authUser.sub)
@@ -276,9 +276,9 @@ describe('UsersController', () => {
     })
 
     it('should throw an error if user not found', async () => {
-      (userService.update as jest.Mock).mockRejectedValue(new BadRequestException('User not found'))
+      (userService.update as jest.Mock).mockRejectedValue(new NotFoundException('User not found'))
 
-      await expect(userController.updateMe(authUser, updateUserDto)).rejects.toThrow(BadRequestException);
+      await expect(userController.updateMe(authUser, updateUserDto)).rejects.toThrow(NotFoundException);
 
       expect(userService.update).toHaveBeenCalledTimes(1)
       expect(userService.update).toHaveBeenCalledWith(authUser.sub, updateUserDto)

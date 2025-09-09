@@ -3,7 +3,7 @@ import { User } from "../../entities/user.entity";
 import { UsersService } from "../../users.service";
 import { getModelToken } from "@nestjs/mongoose";
 import { CreateUserDto } from "../../dto/create-user.dto";
-import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from "../../dto/update-user.dto";
 
@@ -86,7 +86,12 @@ describe('UsersService', () => {
       const result = await service.create(createUserDto);
 
       expect(mockUserModel.findOne).toHaveBeenCalledTimes(1)
-      expect(mockUserModel.findOne).toHaveBeenCalledWith({  email: createUserDto.email, cpf: createUserDto.cpf})
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({
+        $or: [
+          { email: createUserDto.email },
+          { cpf: createUserDto.cpf },
+        ]
+      })
       
       expect(mockUserModel.create).toHaveBeenCalledTimes(1)
       expect(mockUserModel.create).toHaveBeenCalledWith({...createUserDto, password: hashedPassword})
@@ -100,12 +105,22 @@ describe('UsersService', () => {
     })
 
     it('should throw an error if user already exists', async () => {
-      mockUserModel.findOne.mockResolvedValue(createUserDto);
+      mockUserModel.findOne.mockResolvedValue({
+        $or: jest.fn().mockResolvedValue({
+          email: createUserDto.email,
+          cpf: createUserDto.cpf
+        })
+      });
 
       await expect(service.create(createUserDto)).rejects.toThrow(BadRequestException);
 
       expect(mockUserModel.findOne).toHaveBeenCalledTimes(1)
-      expect(mockUserModel.findOne).toHaveBeenCalledWith({  email: createUserDto.email, cpf: createUserDto.cpf })    
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({
+        $or: [
+          { email: createUserDto.email },
+          { cpf: createUserDto.cpf },
+        ]
+      })    
     })
 
     it('should handle internal server error', async () => {
@@ -114,7 +129,12 @@ describe('UsersService', () => {
       await expect(service.create(createUserDto)).rejects.toThrow(InternalServerErrorException);
 
       expect(mockUserModel.findOne).toHaveBeenCalledTimes(1)
-      expect(mockUserModel.findOne).toHaveBeenCalledWith({  email: createUserDto.email, cpf: createUserDto.cpf })    
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({
+        $or: [
+          { email: createUserDto.email },
+          { cpf: createUserDto.cpf },
+        ]
+      })    
     })
   })
 
@@ -162,7 +182,7 @@ describe('UsersService', () => {
         select: jest.fn().mockResolvedValue(null)
       });
 
-      await expect(service.findOne("userId")).rejects.toThrow(BadRequestException);
+      await expect(service.findOne("userId")).rejects.toThrow(NotFoundException);
 
       expect(mockUserModel.findById).toHaveBeenCalledTimes(1)
       expect(mockUserModel.findById).toHaveBeenCalledWith('userId')
@@ -199,7 +219,7 @@ describe('UsersService', () => {
         select: jest.fn().mockResolvedValue(null)
       });
 
-      await expect(service.update('1', updateUserDto)).rejects.toThrow(BadRequestException);
+      await expect(service.update('1', updateUserDto)).rejects.toThrow(NotFoundException);
 
       expect(mockUserModel.findByIdAndUpdate).toHaveBeenCalledTimes(1)
       expect(mockUserModel.findByIdAndUpdate).toHaveBeenCalledWith('1', updateUserDto, { new: true })
@@ -225,13 +245,13 @@ describe('UsersService', () => {
 
       expect(mockUserModel.findByIdAndDelete).toHaveBeenCalledTimes(1)
       expect(mockUserModel.findByIdAndDelete).toHaveBeenCalledWith('1')
-      expect(result).toEqual('User deleted successfully')
+      expect(result).toEqual('Usuário deletado com sucesso.')
     })
 
     it('should throw an error if user not found', async () => {
       mockUserModel.findByIdAndDelete.mockResolvedValue(null);
 
-      await expect(service.remove('userId')).rejects.toThrow(BadRequestException)
+      await expect(service.remove('userId')).rejects.toThrow(NotFoundException)
 
       expect(mockUserModel.findByIdAndDelete).toHaveBeenCalledTimes(1)
       expect(mockUserModel.findByIdAndDelete).toHaveBeenCalledWith('userId')
