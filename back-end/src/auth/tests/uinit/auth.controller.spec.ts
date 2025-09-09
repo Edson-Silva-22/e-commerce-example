@@ -21,7 +21,8 @@ describe('Auth Cotroller', () => {
   }
   // Mock do Response do Express
   const response = {
-    cookie: jest.fn()
+    cookie: jest.fn(),
+    clearCookie: jest.fn()
   } as unknown as Response;
 
   beforeAll(async () => {
@@ -99,6 +100,20 @@ describe('Auth Cotroller', () => {
 
       expect(authService.login).toHaveBeenCalledTimes(1)
       expect(authService.login).toHaveBeenCalledWith(createAuthDto)
+    })
+  })
+
+  describe('Logout Method', () => {
+    it('should logout a user', async () => {
+      const result = await authController.logout(response);
+
+      expect(response.clearCookie).toHaveBeenCalledWith('token', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+      });
+
+      expect(result).toBe('Logout successful');
     })
   })
 })
