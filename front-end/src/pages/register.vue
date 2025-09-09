@@ -1,5 +1,6 @@
 <template>
   <v-container fluid height="100vh" width="100vw" class="d-flex justify-center align-center">
+    <Alert></Alert>
     <v-form 
       class="vForm pa-2"
       style="max-width: 400px; width: 100%;"
@@ -102,6 +103,7 @@
         width="200"
         class="mb-5 mx-auto d-block"
         @click="register"
+        :loading
       >Criar</v-btn>
 
       <v-btn 
@@ -123,8 +125,13 @@
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
   import { useField, useForm } from 'vee-validate';
+  import { useUserStore } from '@/stores/users';
+  import Alert from '@/components/Alert.vue';
+  import { computed } from 'vue';
 
+  const userStore = useUserStore()
   const router = useRouter()
+  const loading = computed(() => userStore.loading)
   const passwordIsVisible = ref(false);
   const ConfirmPasswordIsVisible = ref(false);
   const validationSchema = toTypedSchema(
@@ -167,7 +174,15 @@
 
 
   const register = handleSubmit(async (values) => {
-    console.log(values);
+    const response = await userStore.create({
+      name: values.name,
+      email: values.email,
+      cpf: values.cpf,
+      password: values.password,
+      phone: values.phone
+    })
+    
+    if(response) router.push('/')
   })
 
 </script>
