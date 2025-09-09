@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../users/entities/user.entity';
@@ -17,10 +17,10 @@ export class AuthService {
   async login(createAuthDto: CreateAuthDto) {
     try {
       const userIsExist = await this.userModel.findOne({ email: createAuthDto.email });
-      if (!userIsExist) throw new BadRequestException('User not found')
+      if (!userIsExist) throw new NotFoundException('Usuário não encontrado.')
       
       const passwordIsCorrect = await bcrypt.compare(createAuthDto.password, userIsExist.password);
-      if (!passwordIsCorrect) throw new BadRequestException('Password incorrect')
+      if (!passwordIsCorrect) throw new BadRequestException('Senha incorreta.')
 
       const payload = { sub: userIsExist._id, username: userIsExist.name };
       return {
@@ -28,8 +28,8 @@ export class AuthService {
       };
     } catch (error) {
       console.error(error)
-      if (error instanceof BadRequestException) throw error
-      throw new InternalServerErrorException('Internal server error. It was not possible to login.')
+      if (error instanceof BadRequestException || error instanceof NotFoundException) throw error
+      throw new InternalServerErrorException('Erro Interno. Não foi possível fazer o login.')
     }
   }
 }

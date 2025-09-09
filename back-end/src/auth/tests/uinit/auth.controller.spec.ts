@@ -19,19 +19,6 @@ describe('Auth Cotroller', () => {
     email: 'alex@email',
     password: '123456'
   }
-  const authUser: AuthUserType = {
-    sub: '1',
-    username: 'Alex'
-  }
-  const userMock = {
-    _id: '1',
-    name: 'Alex',
-    email: 'alex@email',
-    cpf: '12345678909',
-    phone: '123456789',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
   // Mock do Response do Express
   const response = {
     cookie: jest.fn()
