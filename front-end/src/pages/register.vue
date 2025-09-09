@@ -182,7 +182,7 @@
       phone: values.phone
     })
     
-    if(response) router.push('/')
+    if(response) router.push('/login')
   })
 
 </script>

@@ -74,6 +74,7 @@
         <v-list class="mt-3" bg-color="foregroud">
             <v-list-item
               v-for="(item, index) in items"
+              v-show="item.visible"
               :key="index"
               :title="item.title"
               :value="index"
@@ -89,17 +90,24 @@
 
 <script lang="ts" setup>
   import { useRouter } from 'vue-router';
+  import { useAuthStore } from '@/stores/auth';
+  import { ref } from 'vue';
 
   const router = useRouter();
-  const items = ref([
+  const authStore = useAuthStore();
+  const userAuth = computed(() => authStore.userAuth);
+
+  const items = computed(() => [
     { 
       title: 'Perfil',
       icon: 'mdi-account',
+      visible: !!userAuth.value,
       // onClick: () => router.push(`/profile/${authStore.userAuth._id}`)
     },
     { 
       title: 'Sair',
       icon: 'mdi-logout',
+      visible: !!userAuth.value,
       // onClick: () => {
       //   authStore.logout();
       //   router.push('/login');
@@ -108,11 +116,13 @@
     {
       title: "Entrar",
       icon: "mdi-login",
+      visible: !userAuth.value,
       onClick: () => router.push("/login")
     },
     {
       title: "Cadastrar",
       icon: "mdi-account-plus",
+      visible: !userAuth.value,
       onClick: () => router.push("/register")
     }
   ])
@@ -138,4 +148,8 @@
       content: "Voçê recebeu um cupom de desconto."
     }
   ])
+
+  onMounted(async () => {
+    await authStore.me();
+  })
 </script>

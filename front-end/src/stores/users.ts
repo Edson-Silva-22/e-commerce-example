@@ -17,8 +17,8 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     const response = await useApi('post', 'users', userDto)
 
-    if(response) return response
     loading.value = false
+    if(response) return response
   }
 
   return{

@@ -7,6 +7,7 @@ export const endPoint = axios.create({
       "Content-Type": "application/json",
       Accept: "application/json",
     },
+    withCredentials: true
   });
 
 /**
@@ -47,7 +48,7 @@ export async function useApi(
       })
     }
 
-    else if (error.response.data.message == 'Sessão expirada.') {
+    else if (error.response.data.message == 'Session expired') {
       window.location.reload()
       useAlert.createAlert('Sessão expirada.', 'error')
     }
@@ -60,14 +61,14 @@ export async function useApi(
   }
 }
 
-endPoint.interceptors.request.use(function (config) {
-  const token = localStorage.getItem('token')
+// endPoint.interceptors.request.use(function (config) {
+//   const token = localStorage.getItem('token')
 
-  if (!config.headers!.Authorization && (token != '')) {
-    config.headers!.Authorization = `Bearer ${token}`
-  }
+//   if (!config.headers!.Authorization && (token != '')) {
+//     config.headers!.Authorization = `Bearer ${token}`
+//   }
 
-  return config
-}, function(error) {
-  return Promise.reject(error)
-})
+//   return config
+// }, function(error) {
+//   return Promise.reject(error)
+// })

@@ -1,5 +1,6 @@
 import Default from "@/layouts/default.vue"
-import { createRouter, createWebHistory } from "vue-router"
+import { useAuthStore } from "@/stores/auth"
+import { createRouter, createWebHistory, type RouteLocationNormalizedLoaded } from "vue-router"
 
 const routes = [
   {
@@ -28,6 +29,25 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+})
+
+router.beforeEach(async (to: RouteLocationNormalizedLoaded) => {
+  if (to.meta.requiresAuth) {
+    const authStore = useAuthStore()
+    const isAuthenticated = await authStore.me()
+
+    if (isAuthenticated) {
+      return true
+    }
+
+    else {
+      return { path: '/login' }
+    }
+  }
+
+  else {
+    return true
+  }
 })
 
 export default router

@@ -1,5 +1,7 @@
 <template>
   <v-container fluid height="100vh" width="100vw" class="d-flex justify-center align-center">
+    <Alert></Alert>
+
     <v-form 
       class="vForm pa-2"
       style="max-width: 400px; width: 100%;"
@@ -42,6 +44,7 @@
         height="54"
         width="200"
         class="mb-5 mx-auto d-block"
+        :loading
         @click="login"
       >Entrar</v-btn>
 
@@ -80,8 +83,13 @@
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
   import { useField, useForm } from 'vee-validate';
+  import { useAuthStore } from '@/stores/auth';
+  import { computed } from 'vue';
+  import Alert from '@/components/Alert.vue';
 
   const router = useRouter()
+  const authStrore = useAuthStore()
+  const loading = computed(() => authStrore.loading)
   const passwordIsVisible = ref(false);
   const validationSchema = toTypedSchema(
     z.object({
@@ -100,7 +108,8 @@
   const { value: password } = useField('password')
 
   const login = handleSubmit(async (values) => {
-    console.log(values);
+    const response = await authStrore.login(values.email, values.password)
+    if (response) router.push('/')
   })
 </script>
 
