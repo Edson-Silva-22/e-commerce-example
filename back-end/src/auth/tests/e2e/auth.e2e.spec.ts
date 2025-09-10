@@ -126,4 +126,15 @@ describe('Auth Endpoints', () => {
       });
     })
   })
+
+  describe('GET /auth', () => {
+    it('should logout a user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/auth/logout')
+        .expect(200);
+
+      expect(response.text).toBe('Logout successful');
+      expect(response.get('Set-Cookie')).toBeDefined()
+    })
+  })
 })

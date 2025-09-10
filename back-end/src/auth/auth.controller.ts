@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { Response } from 'express';
@@ -17,5 +17,15 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7, // Define validade do cookie (em milissegundos)
     });
     return 'Login successful'
+  }
+
+  @Get('logout')
+  async logout(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie('token', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+    });
+    return 'Logout successful'
   }
 }
