@@ -102,16 +102,16 @@
       title: 'Perfil',
       icon: 'mdi-account',
       visible: !!userAuth.value,
-      // onClick: () => router.push(`/profile/${authStore.userAuth._id}`)
+      onClick: () => router.push(`/profile/${authStore.userAuth?._id}`)
     },
     { 
       title: 'Sair',
       icon: 'mdi-logout',
       visible: !!userAuth.value,
-      // onClick: () => {
-      //   authStore.logout();
-      //   router.push('/login');
-      // }
+      onClick: async () => {
+        await authStore.logout();
+        router.push('/login');
+      }
     },
     {
       title: "Entrar",

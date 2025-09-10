@@ -14,7 +14,18 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true
     const response = await useApi('post', 'auth', { email, password })
-    await me()
+    loading.value = false
+    
+    if (response) {
+      await me()
+      return response
+    }
+  }
+
+  async function logout() {
+    loading.value = true
+    const response = await useApi('get', 'auth/logout')
+    userAuth.value = null
     loading.value = false
 
     if (response) return response
@@ -36,6 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     login,
+    logout,
     me,
     userAuth,
     loading

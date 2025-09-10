@@ -2,6 +2,16 @@ import Default from "@/layouts/default.vue"
 import { useAuthStore } from "@/stores/auth"
 import { createRouter, createWebHistory, type RouteLocationNormalizedLoaded } from "vue-router"
 
+declare module 'vue-router' {
+  interface RouteMeta {
+    //permissões para acessar
+    // roles?: string[]
+
+    //exige autenticação
+    requiresAuth?: boolean
+  }
+}
+
 const routes = [
   {
     path: '/',
@@ -10,7 +20,18 @@ const routes = [
       {
         path: '',
         name: 'home',
-        component: () => import('@/pages/home.vue')
+        component: () => import('@/pages/home.vue'),
+        meta: {
+          requiresAuth: false
+        }
+      },
+      {
+        path: 'profile/:id',
+        name: 'profile',
+        component: () => import('@/pages/profile.vue'),
+        meta: {
+          requiresAuth: true
+        }
       }
     ]
   },

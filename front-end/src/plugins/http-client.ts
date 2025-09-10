@@ -23,6 +23,7 @@ export async function useApi(
   headers?:any
 ) {
   const useAlert = useAlertStore()
+  const router = useRouter()
 
   try {
     const response = await endPoint.request({
@@ -35,11 +36,6 @@ export async function useApi(
     if(response.status === 200 || response.status == 201){
       return response.data
     }
-
-    else{
-      console.log(response.data);
-      
-    }
     
   } catch (error:any) {
     if (Array.isArray(error.response.data.message)) {
@@ -49,26 +45,12 @@ export async function useApi(
     }
 
     else if (error.response.data.message == 'Session expired') {
-      window.location.reload()
+      router.push('/login')
       useAlert.createAlert('Sessão expirada.', 'error')
     }
 
-    else{
-      useAlert.createAlert(error.response.data.message, 'error')
-      console.log(error.response.data);
-      
+    else if(error.response.data.message !== 'Unauthorized'){
+      useAlert.createAlert(error.response.data.message, 'error')      
     }
   }
 }
-
-// endPoint.interceptors.request.use(function (config) {
-//   const token = localStorage.getItem('token')
-
-//   if (!config.headers!.Authorization && (token != '')) {
-//     config.headers!.Authorization = `Bearer ${token}`
-//   }
-
-//   return config
-// }, function(error) {
-//   return Promise.reject(error)
-// })
