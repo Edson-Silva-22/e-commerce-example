@@ -6,7 +6,14 @@
     height="64"
   >
     <template v-slot:prepend>
-      <p>Logo</p>
+      <v-img
+        src="@/assets/logo.png"
+        alt="logo"
+        height="48"
+        width="48"
+      ></v-img>
+
+      <h2 class="ml-2" v-show="display.width.value > 400">Compre Lá</h2>
     </template>
 
     <template v-slot:append>
@@ -92,7 +99,9 @@
   import { useRouter } from 'vue-router';
   import { useAuthStore } from '@/stores/auth';
   import { ref } from 'vue';
+  import { useDisplay } from 'vuetify';
 
+  const display = useDisplay();
   const router = useRouter();
   const authStore = useAuthStore();
   const userAuth = computed(() => authStore.userAuth);
